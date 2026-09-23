@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.*
+
+# Build output
+dist/
+
+# Prisma generated client
+generated/
+
+# TypeScript build artifacts
+*.js
+*.js.map
+*.d.ts
+*.d.ts.map
+
+# IDE / AI tool files
+.agents/
+.claude/
+.windsurf/
+
+# OS files
+.DS_Store
+Thumbs.db
