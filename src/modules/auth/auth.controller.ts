@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import type { AuthenticatedRequest } from "../../middleware/auth.middleware.ts";
 import { loginSchema, registerSchema } from "./auth.schema.js";
 import { loginUser, registerUser } from "./auth.service.js";
 import { createAccessToken } from "../../utils/jwt.js";
@@ -93,4 +94,36 @@ export const login = async (req: Request, res: Response) => {
             message: "Something went wrong while logging in",
         });
     }
+};
+
+export const getMe = async (
+    req: AuthenticatedRequest,
+    res: Response
+) => {
+    if (!req.user) {
+        return res.status(401).json({
+            status: "error",
+            message: "Authentication required",
+        });
+    }
+
+    return res.status(200).json({
+        status: "success",
+        data: {
+            user: req.user,
+        },
+    });
+};
+
+export const logout = async (_req: Request, res: Response) => {
+    res.clearCookie("flowforge_token", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+    });
+
+    return res.status(200).json({
+        status: "success",
+        message: "Logged out successfully",
+    });
 };
