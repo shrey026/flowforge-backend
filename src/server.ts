@@ -5,6 +5,7 @@ import morgan from "morgan";
 import { prisma } from "./lib/prisma.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import cookieParser from "cookie-parser";
+import organizationRoutes from "./modules/organization/organization.routes.js";
 
 dotenv.config();
 
@@ -16,8 +17,9 @@ app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan("dev"));
-
 app.use("/api/auth", authRoutes);
+app.use("/api/organizations", organizationRoutes);
+
 
 app.get("/api/health", async (_req, res) => {
     try {
