@@ -8,6 +8,9 @@ import {
     getProjectController,
     updateProjectController,
     deleteProjectController,
+    getProjectMembersController,
+    addProjectMemberController,
+    removeProjectMemberController,
 } from "./project.controller.js";
 
 const router = Router();
@@ -42,4 +45,22 @@ router.delete(
     deleteProjectController
 );
 
+
+router.get(
+    "/projects/:projectId/members",
+    authenticate,
+    getProjectMembersController
+);
+
+router.post(
+    "/projects/:projectId/members",
+    authenticate,
+    addProjectMemberController
+);
+
+router.delete(
+    "/projects/:projectId/members/:userId",
+    authenticate,
+    removeProjectMemberController
+);
 export default router;

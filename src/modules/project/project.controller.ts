@@ -7,6 +7,9 @@ import {
     getProjectById,
     updateProject,
     deleteProject,
+    getProjectMembers,
+    addProjectMember,
+    removeProjectMember,
 } from "./project.service.js";
 
 export const createProjectController = async (
@@ -388,6 +391,264 @@ export const deleteProjectController = async (
         return res.status(500).json({
             status: "error",
             message: "Something went wrong while deleting the project",
+        });
+    }
+};
+
+export const getProjectMembersController = async (
+    req: AuthenticatedRequest,
+    res: Response
+) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({
+                status: "error",
+                message: "Authentication required",
+            });
+        }
+
+        const { projectId } = req.params;
+
+        if (typeof projectId !== "string") {
+            return res.status(400).json({
+                status: "error",
+                message: "Project ID is required",
+            });
+        }
+
+        const result = await getProjectMembers(
+            projectId,
+            req.user.id
+        );
+
+        return res.status(200).json({
+            status: "success",
+            data: result,
+        });
+    } catch (error) {
+        if (
+            error instanceof Error &&
+            error.message === "PROJECT_NOT_FOUND"
+        ) {
+            return res.status(404).json({
+                status: "error",
+                message: "Project not found",
+            });
+        }
+
+        if (
+            error instanceof Error &&
+            error.message === "ORGANIZATION_ACCESS_DENIED"
+        ) {
+            return res.status(403).json({
+                status: "error",
+                message: "You do not have access to this project",
+            });
+        }
+
+        console.error("Get project members error:", error);
+
+        return res.status(500).json({
+            status: "error",
+            message:
+                "Something went wrong while fetching project members",
+        });
+    }
+};
+
+export const addProjectMemberController = async (
+    req: AuthenticatedRequest,
+    res: Response
+) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({
+                status: "error",
+                message: "Authentication required",
+            });
+        }
+
+        const { projectId } = req.params;
+        const { userId } = req.body;
+
+        if (typeof projectId !== "string") {
+            return res.status(400).json({
+                status: "error",
+                message: "Project ID is required",
+            });
+        }
+
+        if (!userId || typeof userId !== "string") {
+            return res.status(400).json({
+                status: "error",
+                message: "User ID is required",
+            });
+        }
+
+        const member = await addProjectMember(
+            projectId,
+            userId,
+            req.user.id
+        );
+
+        return res.status(201).json({
+            status: "success",
+            message: "Project member added successfully",
+            data: {
+                member,
+            },
+        });
+    } catch (error) {
+        if (
+            error instanceof Error &&
+            error.message === "PROJECT_NOT_FOUND"
+        ) {
+            return res.status(404).json({
+                status: "error",
+                message: "Project not found",
+            });
+        }
+
+        if (
+            error instanceof Error &&
+            error.message === "ORGANIZATION_ACCESS_DENIED"
+        ) {
+            return res.status(403).json({
+                status: "error",
+                message: "You do not have access to this project",
+            });
+        }
+
+        if (
+            error instanceof Error &&
+            error.message === "INSUFFICIENT_PERMISSIONS"
+        ) {
+            return res.status(403).json({
+                status: "error",
+                message:
+                    "You do not have permission to add project members",
+            });
+        }
+
+        if (
+            error instanceof Error &&
+            error.message ===
+            "TARGET_USER_NOT_IN_ORGANIZATION"
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message:
+                    "User is not a member of this organization",
+            });
+        }
+
+        if (
+            error instanceof Error &&
+            error.message ===
+            "PROJECT_MEMBER_ALREADY_EXISTS"
+        ) {
+            return res.status(409).json({
+                status: "error",
+                message: "User is already a member of this project",
+            });
+        }
+
+        console.error("Add project member error:", error);
+
+        return res.status(500).json({
+            status: "error",
+            message:
+                "Something went wrong while adding the project member",
+        });
+    }
+};
+
+export const removeProjectMemberController = async (
+    req: AuthenticatedRequest,
+    res: Response
+) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({
+                status: "error",
+                message: "Authentication required",
+            });
+        }
+
+        const { projectId, userId } = req.params;
+
+        if (typeof projectId !== "string") {
+            return res.status(400).json({
+                status: "error",
+                message: "Project ID is required",
+            });
+        }
+
+        if (typeof userId !== "string") {
+            return res.status(400).json({
+                status: "error",
+                message: "User ID is required",
+            });
+        }
+
+        await removeProjectMember(
+            projectId,
+            userId,
+            req.user.id
+        );
+
+        return res.status(200).json({
+            status: "success",
+            message: "Project member removed successfully",
+        });
+    } catch (error) {
+        if (
+            error instanceof Error &&
+            error.message === "PROJECT_NOT_FOUND"
+        ) {
+            return res.status(404).json({
+                status: "error",
+                message: "Project not found",
+            });
+        }
+
+        if (
+            error instanceof Error &&
+            error.message === "ORGANIZATION_ACCESS_DENIED"
+        ) {
+            return res.status(403).json({
+                status: "error",
+                message: "You do not have access to this project",
+            });
+        }
+
+        if (
+            error instanceof Error &&
+            error.message === "INSUFFICIENT_PERMISSIONS"
+        ) {
+            return res.status(403).json({
+                status: "error",
+                message:
+                    "You do not have permission to remove project members",
+            });
+        }
+
+        if (
+            error instanceof Error &&
+            error.message === "PROJECT_MEMBER_NOT_FOUND"
+        ) {
+            return res.status(404).json({
+                status: "error",
+                message: "Project member not found",
+            });
+        }
+
+        console.error("Remove project member error:", error);
+
+        return res.status(500).json({
+            status: "error",
+            message:
+                "Something went wrong while removing the project member",
         });
     }
 };
