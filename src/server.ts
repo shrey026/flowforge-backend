@@ -7,7 +7,7 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import cookieParser from "cookie-parser";
 import organizationRoutes from "./modules/organization/organization.routes.js";
 import projectRoutes from "./modules/project/project.routes.js";
-
+import taskRoutes from "./modules/tasks/tasks.routes.js";
 dotenv.config();
 
 const app = express();
@@ -21,7 +21,7 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRoutes);
 app.use("/api/organizations", organizationRoutes);
 app.use("/api", projectRoutes);
-
+app.use("/api", taskRoutes);
 
 app.get("/api/health", async (_req, res) => {
     try {
