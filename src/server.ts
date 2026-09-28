@@ -9,6 +9,7 @@ import organizationRoutes from "./modules/organization/organization.routes.js";
 import projectRoutes from "./modules/project/project.routes.js";
 import taskRoutes from "./modules/tasks/tasks.routes.js";
 import labelRoutes from "./modules/labels/label.routes.js";
+import commentRoutes from "./modules/comments/comment.routes.js";
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use("/api/organizations", organizationRoutes);
 app.use("/api", projectRoutes);
 app.use("/api", taskRoutes);
 app.use("/api", labelRoutes);
+app.use("/api", commentRoutes);
 
 app.get("/api/health", async (_req, res) => {
     try {
