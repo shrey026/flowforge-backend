@@ -8,6 +8,12 @@ import {
     updateOrganizationMemberRoleController,
     removeOrganizationMemberController,
 } from "./organization.controller.js";
+import {
+    createInvitationController,
+    getOrganizationInvitationsController,
+    acceptInvitationController,
+    revokeInvitationController,
+} from "./invitation.controller.js";
 
 const router = Router();
 
@@ -39,6 +45,30 @@ router.delete(
     "/:id/members/:userId",
     authenticate,
     removeOrganizationMemberController
+);
+
+router.post(
+    "/invitations/accept",
+    authenticate,
+    acceptInvitationController
+);
+
+router.post(
+    "/:id/invitations",
+    authenticate,
+    createInvitationController
+);
+
+router.get(
+    "/:id/invitations",
+    authenticate,
+    getOrganizationInvitationsController
+);
+
+router.delete(
+    "/:id/invitations/:invitationId",
+    authenticate,
+    revokeInvitationController
 );
 
 router.get(
