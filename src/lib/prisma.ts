@@ -9,6 +9,11 @@ const adapter = new PrismaMariaDb({
     password: process.env.DB_PASSWORD || "",
     database: process.env.DB_NAME || "flowforge",
     connectionLimit: 5,
+    // MySQL 8's default caching_sha2_password auth plugin needs to fetch
+    // an RSA public key to encrypt the password; the driver only does that
+    // when explicitly allowed. Fine for local dev without TLS — do not
+    // enable this against a production database.
+    allowPublicKeyRetrieval: true,
 });
 
 export const prisma = new PrismaClient({
