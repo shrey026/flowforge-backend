@@ -1,4 +1,8 @@
 import { prisma } from "../../lib/prisma.js";
+import {
+    getOrganizationMembership,
+    getProjectMembership,
+} from "../tasks/tasks.service.js";
 
 const getTaskWithProject = async (taskId: string) => {
     return prisma.task.findUnique({
@@ -17,18 +21,36 @@ const getTaskWithProject = async (taskId: string) => {
     });
 };
 
-const getOrganizationMembership = async (
-    organizationId: string,
-    userId: string
-) => {
-    return prisma.organizationMember.findUnique({
-        where: {
-            userId_organizationId: {
-                userId,
-                organizationId,
-            },
-        },
-    });
+// Same access policy as the task endpoints: owners and admins can reach any
+// task in their organization, members only tasks in projects they belong to.
+const getAccessibleTask = async (taskId: string, userId: string) => {
+    const task = await getTaskWithProject(taskId);
+
+    if (!task) {
+        throw new Error("TASK_NOT_FOUND");
+    }
+
+    const organizationMembership = await getOrganizationMembership(
+        task.project.organizationId,
+        userId
+    );
+
+    if (!organizationMembership) {
+        throw new Error("ORGANIZATION_ACCESS_DENIED");
+    }
+
+    if (organizationMembership.role === "MEMBER") {
+        const projectMembership = await getProjectMembership(
+            task.projectId,
+            userId
+        );
+
+        if (!projectMembership) {
+            throw new Error("PROJECT_ACCESS_DENIED");
+        }
+    }
+
+    return task;
 };
 
 export const addLabelToTask = async (
@@ -36,20 +58,7 @@ export const addLabelToTask = async (
     labelId: string,
     userId: string
 ) => {
-    const task = await getTaskWithProject(taskId);
-
-    if (!task) {
-        throw new Error("TASK_NOT_FOUND");
-    }
-
-    const membership = await getOrganizationMembership(
-        task.project.organizationId,
-        userId
-    );
-
-    if (!membership) {
-        throw new Error("ORGANIZATION_ACCESS_DENIED");
-    }
+    const task = await getAccessibleTask(taskId, userId);
 
     const label = await prisma.label.findUnique({
         where: {
@@ -95,20 +104,7 @@ export const getTaskLabels = async (
     taskId: string,
     userId: string
 ) => {
-    const task = await getTaskWithProject(taskId);
-
-    if (!task) {
-        throw new Error("TASK_NOT_FOUND");
-    }
-
-    const membership = await getOrganizationMembership(
-        task.project.organizationId,
-        userId
-    );
-
-    if (!membership) {
-        throw new Error("ORGANIZATION_ACCESS_DENIED");
-    }
+    await getAccessibleTask(taskId, userId);
 
     const taskLabels = await prisma.taskLabel.findMany({
         where: {
@@ -132,20 +128,7 @@ export const removeLabelFromTask = async (
     labelId: string,
     userId: string
 ) => {
-    const task = await getTaskWithProject(taskId);
-
-    if (!task) {
-        throw new Error("TASK_NOT_FOUND");
-    }
-
-    const membership = await getOrganizationMembership(
-        task.project.organizationId,
-        userId
-    );
-
-    if (!membership) {
-        throw new Error("ORGANIZATION_ACCESS_DENIED");
-    }
+    await getAccessibleTask(taskId, userId);
 
     const taskLabel = await prisma.taskLabel.findUnique({
         where: {

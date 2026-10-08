@@ -72,6 +72,13 @@ export const addLabelToTaskController = async (
                 });
             }
 
+            if (error.message === "PROJECT_ACCESS_DENIED") {
+                return res.status(403).json({
+                    status: "error",
+                    message: "You do not have access to this project",
+                });
+            }
+
             if (error.message === "LABEL_ORGANIZATION_MISMATCH") {
                 return res.status(403).json({
                     status: "error",
@@ -143,6 +150,13 @@ export const getTaskLabelsController = async (
                     message: "You do not have access to this organization",
                 });
             }
+
+            if (error.message === "PROJECT_ACCESS_DENIED") {
+                return res.status(403).json({
+                    status: "error",
+                    message: "You do not have access to this project",
+                });
+            }
         }
 
         console.error("Get task labels error:", error);
@@ -201,6 +215,13 @@ export const removeLabelFromTaskController = async (
                 return res.status(403).json({
                     status: "error",
                     message: "You do not have access to this organization",
+                });
+            }
+
+            if (error.message === "PROJECT_ACCESS_DENIED") {
+                return res.status(403).json({
+                    status: "error",
+                    message: "You do not have access to this project",
                 });
             }
 

@@ -18,6 +18,19 @@ interface UpdateTaskInput {
     dueDate?: string | null;
 }
 
+// Loaded as part of the task query itself, so listing tasks never needs a
+// second query per task to fetch their labels.
+const taskLabelsInclude = {
+    include: {
+        label: true,
+    },
+    orderBy: {
+        label: {
+            name: "asc",
+        },
+    },
+} as const;
+
 const getProjectWithOrganization = async (projectId: string) => {
     return prisma.project.findUnique({
         where: {
@@ -30,7 +43,7 @@ const getProjectWithOrganization = async (projectId: string) => {
     });
 };
 
-const getOrganizationMembership = async (
+export const getOrganizationMembership = async (
     organizationId: string,
     userId: string
 ) => {
@@ -44,7 +57,7 @@ const getOrganizationMembership = async (
     });
 };
 
-const getProjectMembership = async (
+export const getProjectMembership = async (
     projectId: string,
     userId: string
 ) => {
@@ -184,6 +197,7 @@ export const getProjectTasks = async (
             projectId,
         },
         include: {
+            labels: taskLabelsInclude,
             assignee: {
                 select: {
                     id: true,
@@ -238,6 +252,7 @@ export const getOrganizationTasks = async (
             },
         },
         include: {
+            labels: taskLabelsInclude,
             assignee: {
                 select: {
                     id: true,
@@ -278,6 +293,7 @@ export const getTaskById = async (
             id: taskId,
         },
         include: {
+            labels: taskLabelsInclude,
             assignee: {
                 select: {
                     id: true,

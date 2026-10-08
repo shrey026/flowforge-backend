@@ -6,6 +6,29 @@ import {
     getOrganizationLabels,
 } from "./label.service.js";
 
+// Matches the name column's length in the database.
+const LABEL_NAME_MAX_LENGTH = 191;
+const HEX_COLOR_PATTERN = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+
+/** Returns the color as uppercase `#RRGGBB`, or null if it isn't a hex color. */
+const normalizeLabelColor = (color: string): string | null => {
+    if (!HEX_COLOR_PATTERN.test(color)) {
+        return null;
+    }
+
+    const hex = color.slice(1).toUpperCase();
+
+    const full =
+        hex.length === 3
+            ? hex
+                .split("")
+                .map((char) => char + char)
+                .join("")
+            : hex;
+
+    return `#${full}`;
+};
+
 export const createLabelController = async (
     req: AuthenticatedRequest,
     res: Response
@@ -29,17 +52,31 @@ export const createLabelController = async (
 
         const { name, color } = req.body;
 
-        if (!name || typeof name !== "string") {
+        const trimmedName = typeof name === "string" ? name.trim() : "";
+
+        if (!trimmedName) {
             return res.status(400).json({
                 status: "error",
                 message: "Label name is required",
             });
         }
 
-        if (!color || typeof color !== "string") {
+        if (Array.from(trimmedName).length > LABEL_NAME_MAX_LENGTH) {
             return res.status(400).json({
                 status: "error",
-                message: "Label color is required",
+                message: `Label name must be ${LABEL_NAME_MAX_LENGTH} characters or fewer`,
+            });
+        }
+
+        const normalizedColor =
+            typeof color === "string"
+                ? normalizeLabelColor(color.trim())
+                : null;
+
+        if (!normalizedColor) {
+            return res.status(400).json({
+                status: "error",
+                message: "Label color must be a hex color like #22C55E",
             });
         }
 
@@ -47,8 +84,8 @@ export const createLabelController = async (
             organizationId,
             req.user.id,
             {
-                name: name.trim(),
-                color: color.trim(),
+                name: trimmedName,
+                color: normalizedColor,
             }
         );
 
