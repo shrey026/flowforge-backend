@@ -5,6 +5,7 @@ import { authenticate } from "../../middleware/auth.middleware.js";
 import {
     createTaskController,
     getProjectTasksController,
+    getOrganizationTasksController,
     getTaskController,
     updateTaskController,
     deleteTaskController,
@@ -22,6 +23,12 @@ router.get(
     "/projects/:projectId/tasks",
     authenticate,
     getProjectTasksController
+);
+
+router.get(
+    "/organizations/:organizationId/tasks",
+    authenticate,
+    getOrganizationTasksController
 );
 
 router.get(

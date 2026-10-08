@@ -209,6 +209,66 @@ export const getProjectTasks = async (
     return tasks;
 };
 
+export const getOrganizationTasks = async (
+    organizationId: string,
+    userId: string
+) => {
+    const organizationMembership = await getOrganizationMembership(
+        organizationId,
+        userId
+    );
+
+    if (!organizationMembership) {
+        throw new Error("ORGANIZATION_ACCESS_DENIED");
+    }
+
+    const tasks = await prisma.task.findMany({
+        where: {
+            project: {
+                organizationId,
+                ...(organizationMembership.role === "MEMBER"
+                    ? {
+                        members: {
+                            some: {
+                                userId,
+                            },
+                        },
+                    }
+                    : {}),
+            },
+        },
+        include: {
+            assignee: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    avatarUrl: true,
+                },
+            },
+            createdBy: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    avatarUrl: true,
+                },
+            },
+            project: {
+                select: {
+                    id: true,
+                    name: true,
+                },
+            },
+        },
+        orderBy: {
+            createdAt: "asc",
+        },
+    });
+
+    return tasks;
+};
+
 export const getTaskById = async (
     taskId: string,
     userId: string

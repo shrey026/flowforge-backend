@@ -4,6 +4,7 @@ import type { AuthenticatedRequest } from "../../middleware/auth.middleware.js";
 import {
     createTask,
     getProjectTasks,
+    getOrganizationTasks,
     getTaskById,
     updateTask,
     deleteTask,
@@ -198,6 +199,60 @@ export const getProjectTasksController = async (
         }
 
         console.error("Get project tasks error:", error);
+
+        return res.status(500).json({
+            status: "error",
+            message:
+                "Something went wrong while fetching tasks",
+        });
+    }
+};
+
+export const getOrganizationTasksController = async (
+    req: AuthenticatedRequest,
+    res: Response
+) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({
+                status: "error",
+                message: "Authentication required",
+            });
+        }
+
+        const { organizationId } = req.params;
+
+        if (typeof organizationId !== "string") {
+            return res.status(400).json({
+                status: "error",
+                message: "Organization ID is required",
+            });
+        }
+
+        const tasks = await getOrganizationTasks(
+            organizationId,
+            req.user.id
+        );
+
+        return res.status(200).json({
+            status: "success",
+            data: {
+                tasks,
+            },
+        });
+    } catch (error) {
+        if (
+            error instanceof Error &&
+            error.message === "ORGANIZATION_ACCESS_DENIED"
+        ) {
+            return res.status(403).json({
+                status: "error",
+                message:
+                    "You do not have access to this organization",
+            });
+        }
+
+        console.error("Get organization tasks error:", error);
 
         return res.status(500).json({
             status: "error",
