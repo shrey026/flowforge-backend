@@ -3,6 +3,7 @@ import type { AuthenticatedRequest } from "../../middleware/auth.middleware.js";
 
 import {
     createLabel,
+    deleteLabel,
     getOrganizationLabels,
 } from "./label.service.js";
 
@@ -184,6 +185,76 @@ export const getOrganizationLabelsController = async (
         return res.status(500).json({
             status: "error",
             message: "Something went wrong while fetching labels",
+        });
+    }
+};
+
+export const deleteLabelController = async (
+    req: AuthenticatedRequest,
+    res: Response
+) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({
+                status: "error",
+                message: "Authentication required",
+            });
+        }
+
+        const { organizationId, labelId } = req.params;
+
+        if (
+            typeof organizationId !== "string" ||
+            typeof labelId !== "string"
+        ) {
+            return res.status(400).json({
+                status: "error",
+                message: "Organization ID and Label ID are required",
+            });
+        }
+
+        await deleteLabel(organizationId, labelId, req.user.id);
+
+        return res.status(200).json({
+            status: "success",
+            message: "Label deleted successfully",
+        });
+    } catch (error) {
+        if (
+            error instanceof Error &&
+            error.message === "ORGANIZATION_ACCESS_DENIED"
+        ) {
+            return res.status(403).json({
+                status: "error",
+                message: "You do not have access to this organization",
+            });
+        }
+
+        if (
+            error instanceof Error &&
+            error.message === "INSUFFICIENT_PERMISSIONS"
+        ) {
+            return res.status(403).json({
+                status: "error",
+                message: "You do not have permission to delete labels",
+            });
+        }
+
+        if (
+            error instanceof Error &&
+            error.message === "LABEL_NOT_FOUND"
+        ) {
+            return res.status(404).json({
+                status: "error",
+                message: "Label not found",
+            });
+        }
+
+        console.error("Delete label error:", error);
+
+        return res.status(500).json({
+            status: "error",
+            message: "Something went wrong while deleting the label",
         });
     }
 };

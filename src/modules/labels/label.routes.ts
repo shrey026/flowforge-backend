@@ -4,6 +4,7 @@ import { authenticate } from "../../middleware/auth.middleware.js";
 
 import {
     createLabelController,
+    deleteLabelController,
     getOrganizationLabelsController,
 } from "./label.controller.js";
 
@@ -26,6 +27,13 @@ router.get(
     authenticate,
     getOrganizationLabelsController
 );
+
+router.delete(
+    "/organizations/:organizationId/labels/:labelId",
+    authenticate,
+    deleteLabelController
+);
+
 router.post(
     "/tasks/:taskId/labels",
     authenticate,
